@@ -35,10 +35,15 @@ def get_current_watchlist():
 
 # TODO: 
 # Add a function, movie_ratings, to handle a get request and render the template at "/ratings"
+@app.route("/ratings")
+def movie_ratings():
+    return render_template("ratings.html", watched_movies = get_watched_movies())
 
 # TODO:
 # Add a function, get_watched_movies, to get the list of crossed off movies. 
 # For now, create a hard-coded list with a few movie titles. 
+def get_watched_movies():
+    return [ "Space Balls", "Begin Again"]
 
 # TODO:
 # Make a rating-confirmation.html template, to be displayed when the user rates a movie 
