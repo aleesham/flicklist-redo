@@ -91,14 +91,23 @@ def add_movie():
 
     # TODO 
     # 'escape' the user's input so that if they typed HTML, it doesn't mess up our site
-    
+    new_movie = cgi.escape(new_movie)
+    error = ""
+
     # TODO 
     # if the user typed nothing at all, redirect and tell them the error
+    if new_movie.strip() == "":
+        error = "Please specify the name of the movie you want to add."
+        
 
     # TODO 
     # if the user wants to add a terrible movie, redirect and tell them not to add it b/c it sucks
-
+    if new_movie in terrible_movies:
+        error = "Trust me, you don't want to add '" + new_movie + "' to your Watchlist."
     # build response content
+
+    if error != "":
+        return redirect("/?error={0}".format(error))
     new_movie_element = "<strong>" + new_movie + "</strong>"
     sentence = new_movie_element + " has been added to your Watchlist!"
     content = page_header + "<p>" + sentence + "</p>" + page_footer
