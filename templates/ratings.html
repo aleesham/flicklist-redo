@@ -5,8 +5,9 @@
     {% for movie in watched_movies %}
         <li><h3>{{movie}}</h3>
         <form action="/rating-confirmation" method="post">
+            <input type="hidden" value="{{movie}}" name="movie"/>
             My Rating: 
-            <select name="rating-list">
+            <select name="rating">
                 <option>How was it?</option>
                 <option>*</option>
                 <option>**</option>
@@ -16,6 +17,9 @@
             </select>
             <input type="submit" value="Rate it!"/>
         </form>
+        {% if movie == error_movie %}
+            <p class="error">You have entered an invalid rating.</p>
+        {% endif %}
         </li>
     {% endfor %}
     </ul>
