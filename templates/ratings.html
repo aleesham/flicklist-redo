@@ -15,7 +15,13 @@
                  Hint: How can you use jinja2's templates to include a tag (or text) only
                  if a server side condition is met?  -->
             {% for rating in ["How was it?", "*", "**", "***", "****", "*****"] %}
-              <option>{{ rating }}</option>
+              <option 
+                {% if rating == movie.rating %}   
+                  selected="selected" 
+                {% endif %}
+              >
+                {{ rating }}
+              </option>
             {% endfor %}
           </select>
         </label>
@@ -25,5 +31,9 @@
     </li>
   {% endfor %}
 </ul>
+
+{% if error %}
+  <p class='error'>{{ error }}</p>
+{% endif %}
 
 {% endblock %}

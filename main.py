@@ -4,7 +4,7 @@ import cgi
 
 app = Flask(__name__)
 app.config['DEBUG'] = True      # displays runtime errors in the browser, too
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://flicklist:MyNewPass@localhost:8889/flicklist'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://flicklist:flicklist@localhost:8889/flicklist'
 app.config['SQLALCHEMY_ECHO'] = True
 
 db = SQLAlchemy(app)
@@ -13,8 +13,7 @@ class Movie(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     watched = db.Column(db.Boolean)
-    
-    # TODO: add a ratings column to the Movie table
+    rating = db.Column(db.String(5), default="")
 
     def __init__(self, name):
         self.name = name
@@ -38,7 +37,7 @@ def get_current_watchlist():
 def get_watched_movies():
     # For now, we are just pretending
     # returns the list of movies the user has already watched and crossed off
-    return [ "The Matrix", "The Princess Bride", "Buffy the Vampire Slayer" ]
+    return Movie.query.filter_by(watched=True).all()
 
 # Create a new route called rate_movie which handles a POST request on /rating-confirmation
 @app.route("/rating-confirmation", methods=['POST'])
@@ -56,17 +55,23 @@ def rate_movie():
         return redirect("/?error=" + error)
 
     # if we didn't redirect by now, then all is well
+    if rating not in "*****":
+        error = "This is not a valid rating."
+        return redirect("/ratings?error=" + error)
     
     # TODO: make a persistent change to the model so that you STORE the rating in the database
     # (Note: the next TODO is in templates/ratings.html)
-    
-    return render_template('rating-confirmation.html', movie=movie, rating=rating)
+    movie.rating = rating
+    db.session.add(movie)
+    db.session.commit()       
+    return render_template('rating-confirmation.html', movie=movie)
 
 
 # Creates a new route called movie_ratings which handles a GET on /ratings
 @app.route("/ratings", methods=['GET'])
 def movie_ratings():
-    return render_template('ratings.html', movies = get_watched_movies())
+    encoded_error = request.args.get("error")
+    return render_template('ratings.html', movies = get_watched_movies(), error = encoded_error)
 
 
 @app.route("/crossoff", methods=['POST'])
