@@ -4,7 +4,7 @@ import cgi
 
 app = Flask(__name__)
 app.config['DEBUG'] = True      # displays runtime errors in the browser, too
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://flicklist:MyNewPass@localhost:8889/flicklist'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://flicklist:flicklist@localhost:8889/flicklist'
 app.config['SQLALCHEMY_ECHO'] = True
 
 db = SQLAlchemy(app)
@@ -13,6 +13,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(120))
+    movies = db.relationship('Movie', backref='owner')
     
     def __init__(self, email, password):
         self.email = email
@@ -26,9 +27,11 @@ class Movie(db.Model):
     name = db.Column(db.String(120))
     watched = db.Column(db.Boolean)
     rating = db.Column(db.String(20))
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, name):
+    def __init__(self, name, owner):
         self.name = name
+        self.owner = owner
         self.watched = False
 
     def __repr__(self):
@@ -43,11 +46,14 @@ terrible_movies = [
     "Starship Troopers"
 ]
 
+def get_owner():
+    return User.query.filter_by(email = session['user']).first()
+
 def get_current_watchlist():
-    return Movie.query.filter_by(watched=False).all()
+    return Movie.query.filter_by(watched=False, owner=get_owner()).all()
 
 def get_watched_movies():
-    return Movie.query.filter_by(watched=True).all()
+    return Movie.query.filter_by(watched=True, owner=get_owner()).all()
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -164,7 +170,8 @@ def add_movie():
         error = "Trust me, you don't want to add '{0}' to your Watchlist".format(new_movie_name)
         return redirect("/?error=" + error)
 
-    movie = Movie(new_movie_name)
+    owner = get_owner()
+    movie = Movie(new_movie_name, owner)
     db.session.add(movie)
     db.session.commit()
     return render_template('add-confirmation.html', movie=movie)
